@@ -1,0 +1,12 @@
+kind: reverse
+name: testdb
+source:
+  database: mysql
+  conn_str: 'root:mysql?0103@tcp(124.222.101.66:3306)/video_app_live?parseTime=true' #mysql -uroot -pmysql?0103 -h124.222.101.66
+targets:
+- type: codes
+  language: golang
+  output_dir: ./testoutput
+
+
+

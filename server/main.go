@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/apache/thrift/lib/go/thrift"
 	"os"
 	"sample/gen-go/Sample"
+	"sample/servers"
+	"time"
 )
 
 func Usage() {
@@ -18,42 +19,42 @@ func Usage() {
 
 //定义服务
 type Greeter struct {
+	Protocol string
+	Timeout  time.Duration
+	MaxConns int
+	Addr     string
+	Port     int
 }
 
 //实现IDL里定义的接口
 //SayHello
 func (this *Greeter) SayHello(ctx context.Context, u *Sample.User) (r *Sample.Response, err error) {
+	fmt.Println("say helloword!")
 	strJson, _ := json.Marshal(u)
 	return &Sample.Response{ErrCode: 0, ErrMsg: "success", Data: map[string]string{"User": string(strJson)}}, nil
 }
 
 //GetUser
 func (this *Greeter) GetUser(ctx context.Context, uid int32) (r *Sample.Response, err error) {
+	fmt.Println("say GetUser!")
 	return &Sample.Response{ErrCode: 1, ErrMsg: "user not exist."}, nil
 }
+
 var defaultCtx = context.Background()
 
 func main() {
-	transport, err := thrift.NewTServerSocket(":9090")
+	srv, err := servers.NewServers()
+	if err != nil {
+		panic("create server failed")
+		return
+	}
+	handler := &Greeter{}
+	processor := Sample.NewGreeterProcessor(handler)
+	servers.RegisterService("trpc.ten_video_live.live_management_log.live_management_log", processor)
+	err = srv.Server()
 	if err != nil {
 		panic(err)
 	}
-
-	handler := &Greeter{}
-	processor := Sample.NewGreeterProcessor(handler)
-
-	transportFactory := thrift.NewTBufferedTransportFactory(8192)
-	protocolFactory := thrift.NewTCompactProtocolFactory()
-	server := thrift.NewTSimpleServer4(
-		processor,
-		transport,
-		transportFactory,
-		protocolFactory,
-	)
-
-	if err := server.Serve(); err != nil {
-		panic(err)
-	}
+	select {} // 阻塞
 	return
 }
-

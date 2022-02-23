@@ -1,0 +1,40 @@
+server:
+  filter:                                          #针对所有service处理函数前后的拦截器列表
+  service:                                         #业务服务提供的service，可以有多个
+    - name: trpc.ten_video_live.live_management_log.live_management_log      #service的路由名称
+      ip: 127.0.0.1                            #服务监听ip地址 可使用占位符 ${ip},ip和nic二选一，优先ip
+      #nic: eth0
+      port: 8001                #服务监听端口 可使用占位符 ${port}
+      timeout: 100000                          #请求最长处理时间 单位 毫秒
+    - name: trpc.ten_video_live.live_management_log.live_management_log_http      #service的路由名称
+      ip: 127.0.0.1                            #服务监听ip地址 可使用占位符 ${ip},ip和nic二选一，优先ip
+      #nic: eth0
+      port: 8001                #服务监听端口 可使用占位符 ${port}
+      timeout: 1000000
+
+client:                                            #客户端调用的后端配置
+  timeout: 100000                                    #针对所有后端的请求最长处理时间
+  filter:                                          #针对所有后端调用函数前后的拦截器列表
+  service:                                         #针对单个后端的配置
+    - name: trpc.ten_video_live.live_management_log.live_management_log      #后端服务的service name
+      target: ip://127.0.0.1:8000              #请求服务地址
+      timeout: 10000                            #请求最长处理时间
+    - name: trpc.mysql.xxx.xxx
+      target: dsn://root:123456@tcp(127.0.0.1:3306)/video_app_live?timeout=10s&parseTime=true&interpolateParams=true #mdb使用域名多实例需要加上 &interpolateParams=true
+    - name: trpc.trpc-mysql-driver.log.sec
+      target: dsn://root:123456@tcp(127.0.0.1:3306)/video_app_live?parseTime=True #mdb使用域名多实例需要加上 &interpolateParams=true
+      timeout: 1000
+
+plugins:                                          #插件配置
+  log:                                            #日志配置
+    default:                                      #默认日志的配置，可支持多输出
+      - writer: console                           #控制台标准输出 默认
+        level: debug                              #标准输出日志的级别
+      - writer: file                              #本地文件日志
+        level: info                               #本地文件滚动日志的级别
+        writer_config:
+          filename: ./trpc.log                      #本地文件滚动日志存放的路径
+          max_size: 10                              #本地文件滚动日志的大小 单位 MB
+          max_backups: 10                           #最大日志文件数
+          max_age: 7                                #最大日志保留天数
+          compress:  false                          #日志文件是否压缩
